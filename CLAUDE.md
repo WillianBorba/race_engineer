@@ -10,7 +10,8 @@
 
 1. [Architecture overview](#1-architecture-overview)
 2. [Tech stack](#2-tech-stack)
-3. [Post-implementation checklist](#3-post-implementation-checklist)
+3. [TDD workflow](#3-tdd-workflow)
+4. [Post-implementation checklist](#4-post-implementation-checklist)
 
 ---
 
@@ -72,7 +73,53 @@ Race Engineer is a virtual racing engineer assistant for sim racing, starting wi
 ---
 
 
-## 3. Post-implementation checklist
+## 3. TDD workflow
+
+**All production code in this project is written test-first.** No exceptions.
+
+### The cycle
+
+```
+1. RED   — write the smallest failing test that describes the desired behaviour
+2. GREEN — write the minimum production code to make it pass (no more)
+3. REFACTOR — clean up without changing behaviour; tests must stay green
+```
+
+Repeat for every behaviour. Commit after each green + refactor step.
+
+### Rules
+
+- **Never write production code without a failing test driving it.**
+- A test must fail for the right reason before any implementation is added (assert the failure message makes sense).
+- Keep the unit under test isolated: mock `db`, `s3`, and `llm` at the service boundary — never hit real infrastructure in unit tests.
+- Integration tests may use real infrastructure (Docker Compose stack must be up).
+- One behaviour per test. Test names read as sentences: `"returns 401 when token is missing"`.
+- Tests live in `src/__tests__/unit/` and `src/__tests__/integration/` mirroring the source path (e.g. `src/services/authService.js` → `src/__tests__/unit/services/authService.test.js`).
+
+### What to test per layer
+
+| Layer | Scope | Mocks |
+|---|---|---|
+| `services/` | business logic, branching, error paths | `models/`, `storage/s3`, `core/llm` |
+| `models/` | SQL correctness | real DB (integration) or `mysql2` mock (unit) |
+| `routes/` | HTTP contract (status, body shape) | services mocked via `jest.mock` |
+| `simulators/` | adapter output, prompt shape | none needed |
+
+### Running tests
+
+```bash
+npm test                  # all tests
+npm run test:watch        # watch mode during development
+npm run test:coverage     # coverage report
+```
+
+> **Claude:** when implementing any feature, follow RED → GREEN → REFACTOR strictly.
+> Write and show the failing test first, then implement, then refactor.
+> Never skip to implementation.
+
+---
+
+## 4. Post-implementation checklist
 
 Run through this after completing any feature or bugfix before opening a PR.
 
@@ -87,10 +134,11 @@ Run through this after completing any feature or bugfix before opening a PR.
 
 ### Tests
 
+- [ ] Each behaviour was driven by a failing test first (RED → GREEN → REFACTOR)
 - [ ] Unit test covers the service logic (LLM and S3 mocked)
 - [ ] Integration test covers the happy path for new routes
 - [ ] Edge cases tested: missing fields, unauthorized access, not found, unknown simulator
-- [ ] All tests passes with no failures
+- [ ] All tests pass with no failures (`npm test`)
 
 ### Security
 
