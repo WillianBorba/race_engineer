@@ -23,10 +23,10 @@ Race Engineer is a virtual racing engineer assistant for sim racing, starting wi
 [ Pilot ]
     │  browser / app
     ▼
-[ React SPA ]
-    │  REST + JWT
+[ Next.js — frontend/ ]
+    │  REST + JWT (httpOnly cookie)
     ▼
-[ Express API  ←──────────────────── JWT middleware ]
+[ Express API — backend/ ←──────── JWT middleware ]
     │         │              │
     │         ▼              ▼
     │      [ MySQL ]     [ S3 / LocalStack ]
@@ -45,11 +45,43 @@ Race Engineer is a virtual racing engineer assistant for sim racing, starting wi
   full session history + optional telemetry injected on every call
 ```
 
+### Monorepo structure
+
+```
+Race Engineer/
+  backend/            ← Express API (Node.js 22)
+    src/
+    package.json
+    jest.config.js
+    .env.example
+  frontend/           ← Next.js App Router
+    app/
+    components/
+    package.json
+  infrastructure/     ← Docker Compose, DB migrations, LocalStack config
+    docker-compose.yml
+    db/
+      migrations/
+  package.json        ← root orchestration scripts (dev, test, infra)
+  CLAUDE.md
+```
+
+**Root scripts:**
+```bash
+npm run dev:backend          # nodemon backend
+npm run dev:frontend         # Next.js dev server
+npm run test:backend         # Jest (backend)
+npm run test:frontend        # Jest/Vitest (frontend)
+npm test                     # both suites
+npm run infra:up             # docker compose up -d
+npm run infra:down           # docker compose down
+```
+
 **Data split (important):**
 - **MySQL** → structured, relational data: users, sessions, laps
 - **S3** → conversation turns as append-only JSON blobs; never store large text in MySQL
 
-**Multi-simulator strategy:** core business logic never imports a simulator directly. Each sim implements a common `SimulatorAdapter` contract. The active adapter is resolved from `session.simulator` at request time. Adding a new sim = new folder under `simulators/` + register in `simulators/index.js`.
+**Multi-simulator strategy:** core business logic never imports a simulator directly. Each sim implements a common `SimulatorAdapter` contract. The active adapter is resolved from `session.simulator` at request time. Adding a new sim = new folder under `backend/src/simulators/` + register in `simulators/index.js`.
 
 **Current scope (v1):** ACC only, conversation-based interaction (no live telemetry yet).
 **Planned:** real-time ACC telemetry via UDP / shared memory; then iRacing, rFactor 2.
@@ -65,7 +97,7 @@ Race Engineer is a virtual racing engineer assistant for sim racing, starting wi
 | Database | MySQL | 8 |
 | Object storage | AWS S3 | LocalStack in dev |
 | Auth | JWT | stateless; bcrypt for passwords; no refresh token in v1 |
-| Frontend | React | SPA; landing (login) + chat UI |
+| Frontend | Next.js (App Router) | landing (login) + chat UI; new pages added as `app/<route>/page.jsx` |
 | Testing | Jest | unit + integration |
 | LLM | Self-hosted model | internal HTTP; never call external LLM APIs |
 | Containerization | Docker Compose | local dev; AWS target for prod |
@@ -94,7 +126,7 @@ Repeat for every behaviour. Commit after each green + refactor step.
 - Keep the unit under test isolated: mock `db`, `s3`, and `llm` at the service boundary — never hit real infrastructure in unit tests.
 - Integration tests may use real infrastructure (Docker Compose stack must be up).
 - One behaviour per test. Test names read as sentences: `"returns 401 when token is missing"`.
-- Tests live in `src/__tests__/unit/` and `src/__tests__/integration/` mirroring the source path (e.g. `src/services/authService.js` → `src/__tests__/unit/services/authService.test.js`).
+- Tests live in `backend/src/__tests__/unit/` and `backend/src/__tests__/integration/` mirroring the source path (e.g. `backend/src/services/authService.js` → `backend/src/__tests__/unit/services/authService.test.js`).
 
 ### What to test per layer
 
@@ -108,9 +140,16 @@ Repeat for every behaviour. Commit after each green + refactor step.
 ### Running tests
 
 ```bash
-npm test                  # all tests
-npm run test:watch        # watch mode during development
-npm run test:coverage     # coverage report
+# From repo root
+npm test                          # all suites (backend + frontend)
+npm run test:backend              # backend only
+npm run test:frontend             # frontend only
+
+# From backend/ directly
+cd backend
+npm test                          # all backend tests
+npm run test:watch                # watch mode during development
+npm run test:coverage             # coverage report
 ```
 
 > **Claude:** when implementing any feature, follow RED → GREEN → REFACTOR strictly.
@@ -126,8 +165,8 @@ Run through this after completing any feature or bugfix before opening a PR.
 ### Code
 
 - [ ] Route delegates to service — no business logic in the handler
-- [ ] No raw SQL outside `models/`
-- [ ] New env vars added to `.env.example` this file
+- [ ] No raw SQL outside `backend/src/models/`
+- [ ] New env vars added to `backend/.env.example`
 - [ ] New files/folders reflected in this file
 - [ ] New service, model, or adapter documented in this file
 - [ ] If a new session needs to be created, feel free to do so
@@ -138,7 +177,7 @@ Run through this after completing any feature or bugfix before opening a PR.
 - [ ] Unit test covers the service logic (LLM and S3 mocked)
 - [ ] Integration test covers the happy path for new routes
 - [ ] Edge cases tested: missing fields, unauthorized access, not found, unknown simulator
-- [ ] All tests pass with no failures (`npm test`)
+- [ ] All tests pass with no failures (`npm test` from repo root or `cd backend && npm test`)
 
 ### Security
 
@@ -164,3 +203,5 @@ Run through this after completing any feature or bugfix before opening a PR.
 | 5 | JWT stateless, no refresh token (v1) | Simplicity; revisit when multi-device or long-lived sessions are needed |
 | 6 | 1 user = 1 pilot (v1) | Team/multi-pilot support intentionally deferred |
 | 7 | Adapter/Strategy pattern for simulators, not Clean Architecture | Multi-sim support needed; Clean Architecture overhead not justified for this scope. Core never imports a sim directly — adapters are resolved at request time from `session.simulator` |
+| 8 | Monorepo with `backend/`, `frontend/`, `infrastructure/` | Clear separation of concerns; each layer has its own `package.json` and test suite; root scripts orchestrate the full stack |
+| 9 | Next.js App Router, not React SPA | New pages scale naturally via `app/<route>/page.jsx`; no client-side routing boilerplate; SSR capability available when needed |
