@@ -1,0 +1,127 @@
+.section {
+  position: relative;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0d0d0d 0%, #1a0505 40%, #0A1F44 100%);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(225, 6, 0, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(10, 31, 68, 0.6) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+}
+
+.speedLines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.06;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 60px 40px;
+  max-width: 700px;
+}
+
+.headline {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  color: var(--color-white);
+  margin-bottom: 20px;
+}
+
+.headlineAccent {
+  color: var(--color-red-racing);
+}
+
+.subheadline {
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.65;
+  color: rgba(201, 209, 217, 0.85);
+  margin-bottom: 40px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 40px;
+  background: var(--color-red-racing);
+  color: var(--color-white);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 30px rgba(225, 6, 0, 0.4);
+  margin-bottom: 16px;
+}
+
+.btn:hover {
+  background: #c00500;
+  transform: translateY(-3px);
+  box-shadow: 0 16px 50px rgba(225, 6, 0, 0.5);
+}
+
+.smallNote {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-gray-500);
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .headline {
+    font-size: 42px;
+  }
+
+  .subheadline {
+    font-size: 16px;
+  }
+
+  .btn {
+    font-size: 16px;
+    padding: 16px 32px;
+  }
+}
+
+@media (max-width: 390px) {
+  .headline {
+    font-size: 34px;
+  }
+
+  .content {
+    padding: 40px 20px;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

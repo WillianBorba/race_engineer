@@ -9,7 +9,7 @@ app.use(express.json());
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // Routes (added as features are built)
-// app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth'));
 // app.use('/api/sessions', require('./routes/sessions'));
 // app.use('/api/chat', require('./routes/chat'));
 

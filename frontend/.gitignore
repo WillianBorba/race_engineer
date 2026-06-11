@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Next.js build output
+.next/
+out/
+build/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Jest / coverage
+coverage/
+.nyc_output/
+
+# Vercel
+.vercel/
+
+# PWA
+public/sw.js
+public/workbox-*.js

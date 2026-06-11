@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*.local
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# Jest / coverage
+coverage/
+.nyc_output/
+
+# Build
+dist/
+
+# Uploads / temp files
+uploads/
+tmp/
